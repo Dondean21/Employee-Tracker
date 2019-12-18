@@ -12,6 +12,7 @@ const connection = mysql.createConnection({
 })
 
 
+
 connection.connect(function(err){
    if (err) throw err;
    startApp();
@@ -65,6 +66,7 @@ const startApp = () => {
       })
 }
 
+
 const viewEmployees = () => {
    var query = "SELECT * FROM employees";
    connection.query(query, function(err, res) {
@@ -75,6 +77,8 @@ const viewEmployees = () => {
    })
 }
 
+
+
 const viewDepartments = () => {
    var query = "SELECT * FROM department";
    connection.query(query, function(err, res) {
@@ -83,6 +87,7 @@ const viewDepartments = () => {
       startApp();
    })
 }
+
 
 const viewRoles = () => {
    var query = "SELECT * FROM role";
