@@ -227,56 +227,63 @@ const addRole = () => {
    })
    
 }
-function updateRole() {
-    connection.query("SELECT * FROM employees", function (err, results) {
-        if (err) throw err;
-        inquirer
-            .prompt([
-                {
-                    type: "list",
-                    name: "employeeName",
-                    message: "Please select the employee you want to edit.",
-                    choices: function () {
-                        var choiceArray = [];
-                        for (var i = 0; i < results.length; i++) {
-                            choiceArray.push(results[i].id + " " + results[i].first_name + " " + results[i].last_name);
-                        }
-                        return choiceArray;
-                    }
-                }
-            ])
-            .then(function (data) {
-                for (var i = 0; i < results.length; i++) {
-                    if (data.employeeName === results[i].id + " " + results[i].first_name + " " + results[i].last_name) {
-                        var employeesID = results[i].id;
-                    }
-                }
-                return (employeesID);
-            })
-            .then(function (employeesID) {
-                inquirer
-                    .prompt([
-                        {
-                            type: "list",
-                            name: "chooseEdit",
-                            message: "What would you like to edit for this employee?",
-                            choices: ['First name', 'Last name', 'Role', 'Manager']
-                        }
-                    ])
-                    .then(function (data) {
-                        if (data.chooseEdit === "First name") {
-                            newFirstName(employeesID);
-                        } else if (data.chooseEdit === "Last name") {
-                            newLastName(employeesID);
-                        } else if (data.chooseEdit === "Role") {
-                            newEmpRole(employeesID);
-                        } else {
-                            newManager(employeesID);
-                        }
-                    });
-            });
-    })
-}
+
+
+
+function updateRole(){
+   let employees = [];
+   let queryString = "SELECT * FROM role r, employees e WHERE r.id = e.role_id";
+   connection.query(queryString, function(err, res) {
+     if (err) throw err;
+     for (let i = 0; i < res.length; i++) {
+       employees.push(res[i].first_name + " " + res[i].last_name);
+     }
+     if (employees.length == 0) {
+       console.log("\nNo Employees Stored In The Database\n");
+       setTimeout(function(){addEmployee();}, 1000);
+     }else{
+     let role = [];
+     let queryString = "SELECT r.id AS roleId, r.title FROM role r";
+     connection.query(queryString, function(err, res) {
+       for (i = 0; i < res.length; i++) {
+         role.push(res[i].title);}
+       if (err) throw err;});
+       inquirer.prompt([
+         {name: "employeeName",
+         type: "list",
+         message: "Choose Employee to Edit",
+         choices: employees
+       },
+         {
+           name: "roleChoice",
+           type: "list",
+           message: `Choose New Role`,
+           choices: role
+         }
+       ])
+       .then(function(data) {
+         let newRole;
+         for(i = 0; i < role.length; i++){
+           if(role[i] === data.roleChoice){
+             newRole = i + 1;
+           }
+         }
+         let updateNameArr = data.employeeName.split(" ");
+         let first = updateNameArr[0];
+         let last = updateNameArr[1];
+         let employee = [{role_id: newRole},{first_name: first},{last_name: last}]
+         let query = "UPDATE employees SET ? WHERE ? AND ?";
+         connection.query(query, employee,
+           function(err, res) {
+             if (err) throw err;
+             console.log(`\n${first} ${last}'s Role Updated To ${data.roleChoice}\n`);
+             startApp();
+           }
+         );
+       });}
+   });
+ }
+
 
 const endApp = () => {
    connection.end();
